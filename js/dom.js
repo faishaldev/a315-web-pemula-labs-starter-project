@@ -1,13 +1,20 @@
 const UNCOMPLETED_LIST_TODO_ID = "todos";
 const COMPLETED_LIST_TODO_ID = "completed-todos";
+const TODO_ITEMID = "itemId";
 
 const addTodo = () => {
     const uncompletedTODOList = document.getElementById(UNCOMPLETED_LIST_TODO_ID);
     const textTodo = document.getElementById("title").value;
     const timestamp = document.getElementById("date").value;
-    const todo = makeTodo(textTodo, timestamp);
+
+    const todo = makeTodo(textTodo, timestamp, false);
+    const todoObject = composeTodoObject(textTodo, timestamp, false);
+
+    todo[TODO_ITEMID] = todoObject.id;
+    todos.push(todoObject);
 
     uncompletedTODOList.append(todo);
+    updateDataToStorage();
 }
 
 const makeTodo = (data, timestamp, isCompleted) => {
@@ -49,11 +56,17 @@ const createButton = (buttonTypeClass, eventListener) => {
 const addTaskToCompleted = (taskElement) => {
     const taskTitle = taskElement.querySelector(".inner > h2").innerText;
     const taskTimestamp = taskElement.querySelector(".inner > p").innerText;
+    const listCompleted = document.getElementById(COMPLETED_LIST_TODO_ID);
 
     const newTodo = makeTodo(taskTitle, taskTimestamp, true);
-    const listCompleted = document.getElementById(COMPLETED_LIST_TODO_ID);
+    const todo = findTodo(taskElement[TODO_ITEMID]);
+    todo.isCompleted = true;
+    newTodo[TODO_ITEMID] = todo.id;
+
     listCompleted.append(newTodo);
     taskElement.remove();
+
+    updateDataToStorage();
 }
 
 const createCheckButton = () => {
@@ -63,7 +76,11 @@ const createCheckButton = () => {
 }
 
 const removeTaskFromCompleted = (taskElement) => {
+    const todoPosition = findTodoIndex(taskElement[TODO_ITEMID]);
+    todos.splice(todoPosition, 1);
+    
     taskElement.remove();
+    updateDataToStorage();
 }
 
 const createTrashButton = () => {
@@ -79,8 +96,14 @@ const undoTaskFromCompleted = (taskElement) => {
 
     const newTodo = makeTodo(taskTitle, taskTimestamp, false);
 
+    const todo = findTodo(taskElement[TODO_ITEMID]);
+    todo.isCompleted = false;
+    newTodo[TODO_ITEMID] = todo.id;
+
     listUncompleted.append(newTodo);
     taskElement.remove();
+
+    updateDataToStorage();
 }
 
 const createUndoButton = () => {
